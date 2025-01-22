@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -11,8 +12,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody rb;
     public float chargeTime = 0f;   // 當前蓄力時間
-    private bool isCharging = false; // 是否正在蓄力
+    public bool isCharging = false; // 是否正在蓄力
     private bool isJumping = false;  // 是否正在跳躍
+    public bool isGrounded = true;
     private Vector3 startPoint;
 
     [Header("彈力相關")]
@@ -32,6 +34,10 @@ public class PlayerMovement : MonoBehaviour
     public Text chargeTimeText;     // 蓄力顯示UI
     public Slider chargeSlider;     // 蓄力條
 
+    [Header("撞擊相關")]
+    private bool isStunned = false; // 是否處於暈眩狀態
+    private float stunEndTime = 0f; // 暈眩結束時間
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -39,18 +45,37 @@ public class PlayerMovement : MonoBehaviour
 
         startPoint = transform.position; // 初始化起點位置
         InitializeGrounds();             // 初始化地面位置
+
+        rb.useGravity = true;
+
     }
 
     private void Update()
     {
-        // 持續向前移動
-        MoveForward();
+        if (Time.time > stunEndTime)
+        {
+            isStunned = false;
+        }
 
-        // 處理跳躍邏輯
-        JumpControl();
+        if (!isStunned)
+        {
+            // 持續向前移動
+            MoveForward();
+
+            // 處理跳躍邏輯
+            JumpControl();
+        }
 
         // 更新距離 UI
         UpdateDistanceUI();
+    }
+
+    private void FixedUpdate()
+    {
+        if (!isStunned)
+        {
+            Movement();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -59,11 +84,36 @@ public class PlayerMovement : MonoBehaviour
         {
             UpdateGroundPosition(); // 更新地面位置
         }
-    }
+
+        if (other.CompareTag("Obstacle"))
+        {
+            // TODO: 場景重製
+            // TODO: 
+            transform.position = startPoint;
+        }
+    }   
 
     private void MoveForward()
     {
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        //transform.Translate(Vector3.forward * speed * Time.deltaTime);
+
+    }
+
+    void Movement()
+    {
+        // TODO: wad控制Player
+
+        float horizontalmove = Input.GetAxis("Horizontal");
+        float verticalmove = Input.GetAxis("Vertical");
+
+        if (verticalmove != 0f)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, verticalmove * speed * Time.fixedDeltaTime);
+        }
+        if (horizontalmove != 0f)
+        {
+            rb.velocity = new Vector3(horizontalmove * speed * Time.fixedDeltaTime, rb.velocity.y, rb.velocity.z);
+        }
     }
 
     private void InitializeGrounds()
@@ -93,38 +143,40 @@ public class PlayerMovement : MonoBehaviour
     {
         if (IsGrounded())
         {
-            isJumping = false;            
+            isJumping = false;
+        }
 
-            // 按下空白鍵開始蓄力
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                isCharging = true;
-                chargeTime = 0f; // 重置蓄力時間
-                                
-                bounceMaterial.bounciness = 0; //重置bounciness的值
-            }
+        isGrounded = IsGrounded();
 
-            // 持續蓄力
-            if (isCharging && Input.GetKey(KeyCode.Space))
-            {
-                chargeTime += Time.deltaTime;
-                chargeTime = Mathf.Clamp(chargeTime, 0, maxChargeTime); // 限制蓄力時間
+        // 按下空白鍵開始蓄力
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            isCharging = true;
+            chargeTime = 0f; // 重置蓄力時間
 
-                chargeTimeText.text = Mathf.RoundToInt(chargeTime).ToString();
-            }
+            bounceMaterial.bounciness = 0; //重置bounciness的值
+        }
 
-            // 釋放空白鍵執行跳躍
-            if (Input.GetKeyUp(KeyCode.Space) && isCharging)
-            {
-                Jump();
-                isCharging = false;
-            }
+        // 持續蓄力
+        if (isCharging && Input.GetKey(KeyCode.Space))
+        {
+            chargeTime += Time.deltaTime;
+            chargeTime = Mathf.Clamp(chargeTime, 0, maxChargeTime); // 限制蓄力時間
+
+            chargeTimeText.text = Mathf.RoundToInt(chargeTime).ToString();
+        }
+
+        // 釋放空白鍵執行跳躍
+        if (Input.GetKeyUp(KeyCode.Space) && isCharging && isGrounded)
+        {
+            Jump();
+            isCharging = false;
         }
 
         // 當在空中時啟用重力
         if (isJumping && rb.velocity.y <= 0)
         {
-            rb.useGravity = true;
+           // rb.useGravity = true;
         }
     }
 
@@ -135,7 +187,7 @@ public class PlayerMovement : MonoBehaviour
 
         // 重置速度並禁用重力
         rb.velocity = Vector3.zero;
-        rb.useGravity = false;
+       // rb.useGravity = false;
 
         // 向上施加跳躍力
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -143,12 +195,19 @@ public class PlayerMovement : MonoBehaviour
         isJumping = true;
 
         // 設置彈性（bounciness）
-        float newBounciness = Mathf.Lerp(baseBounciness, maxBounciness, chargeTime / maxChargeTime - 1.5f);
+        float newBounciness = Mathf.Lerp(baseBounciness, maxBounciness, chargeTime / maxChargeTime);
         bounceMaterial.bounciness = newBounciness;
         ballCollider.material = bounceMaterial;
-    }
+    }    
 
-    private bool IsGrounded()
+    public void HitPlayer(Vector3 force, float stunTime)
+    {
+        rb.velocity = force;
+        isStunned = true;
+        stunEndTime = Time.time + stunTime;
+    }   
+
+    bool IsGrounded()
     {
         // 使用 Raycast 檢測是否在地面
         return Physics.Raycast(transform.position, Vector3.down, 1.1f);

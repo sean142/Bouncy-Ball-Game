@@ -61,7 +61,7 @@ public class CameraManager : MonoBehaviour {
 		transform.rotation = Quaternion.Euler(0, lookAngle, 0); //Apply the angle
 
 	}
-
+	
 	private void FixedUpdate()
 	{//Function that correctly rotates the camera based on the joystick / mouse and follows the player (the delta time is sent to be independent of the fps)
 		float h = Input.GetAxis("Mouse X");
@@ -70,7 +70,7 @@ public class CameraManager : MonoBehaviour {
 		//float c_h = Input.GetAxis("RightAxis X");
 		//float c_v = Input.GetAxis("RightAxis Y");
 
-		float targetSpeed = mouseSpeed;
+		//float targetSpeed = mouseSpeed;
 
 		/*if (c_h != 0 || c_v != 0)
 		{ //Overwrites if i use joystick
@@ -80,7 +80,7 @@ public class CameraManager : MonoBehaviour {
 		}*/
 
 		FollowTarget(Time.deltaTime); //Follow player
-		HandleRotations(Time.deltaTime, v, h, targetSpeed); //Rotates camera
+		//HandleRotations(Time.deltaTime, v, h, targetSpeed); //Rotates camera
 	}
 
 	private void LateUpdate()
