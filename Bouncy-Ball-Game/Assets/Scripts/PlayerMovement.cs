@@ -23,11 +23,17 @@ public class PlayerMovement : MonoBehaviour
     public float maxBounciness = 0.5f;    // 最大彈性
     private Collider ballCollider;        // 球的碰撞器
 
-    [Header("地面設定")]
-    public GameObject[] grounds;    // 地面陣列
-    public GameObject wallCheck;    // 墙體檢測物件
+    [Header("NormalGrounds地面設定")]
+    public GameObject[] normalGrounds;   
+    public GameObject normalGroundsWallCheck;    
     private int nextGroundIndex = 0;
     private int groundLength = 50;  // 單片地面的長度
+
+    [Header("MoveGround地面設定")]
+    public GameObject moveGround;
+    public GameObject moveGroundWallCheck;
+    public int targetOffset = 5;  // Z 軸移動的距離
+    public float moveSpeed = 2f;  // 移動速度
 
     [Header("UI")]
     public Text distanceText;       // 距離顯示 UI
@@ -82,10 +88,20 @@ public class PlayerMovement : MonoBehaviour
     {
         if (other.CompareTag("Wall"))
         {
-            UpdateGroundPosition(); // 更新地面位置
+            UpdateGroundPosition(); // 更新地面位置          
         }
 
-        if (other.CompareTag("Obstacle"))
+        if (other.CompareTag("MoveGroundWallCheck"))
+        {
+            // 計算目標位置
+            Vector3 targetPosition = moveGround.transform.position;
+            targetPosition.z += targetOffset;
+
+            // 開始移動地板
+            StartCoroutine(MoveGroundToPosition(targetPosition));
+        }
+
+        if (other.CompareTag("DeadLine"))
         {
             // TODO: 場景重製
             // TODO: 
@@ -118,25 +134,45 @@ public class PlayerMovement : MonoBehaviour
 
     private void InitializeGrounds()
     {
-        for (int i = 0; i < grounds.Length; i++)
+        for (int i = 0; i < normalGrounds.Length; i++)
         {
-            grounds[i].transform.position = new Vector3(0, 0, i * groundLength);
+            normalGrounds[i].transform.position = new Vector3(0, 0, i * groundLength);
         }
     }
 
     private void UpdateGroundPosition()
     {
-        GameObject groundToMove = grounds[nextGroundIndex];
-        float newZPosition = grounds.Length * groundLength + groundToMove.transform.position.z;
+        GameObject groundToMove = normalGrounds[nextGroundIndex];
+        float newZPosition = normalGrounds.Length * groundLength + groundToMove.transform.position.z;
         groundToMove.transform.position = new Vector3(0, 0, newZPosition);
 
         // 更新下一個地面的索引
-        nextGroundIndex = (nextGroundIndex + 1) % grounds.Length;
+        nextGroundIndex = (nextGroundIndex + 1) % normalGrounds.Length;
 
         // 更新牆體檢測位置
-        Vector3 wallPoint = wallCheck.transform.position;
+        Vector3 wallPoint = normalGroundsWallCheck.transform.position;
         wallPoint.z += groundLength;
-        wallCheck.transform.position = wallPoint;
+        normalGroundsWallCheck.transform.position = wallPoint;
+    }
+
+    private IEnumerator MoveGroundToPosition(Vector3 targetPosition)
+    {
+
+        // 當前地板的位置
+        Vector3 startPosition = moveGround.transform.position;
+
+        float elapsedTime = 0f;
+
+        // 持續移動直到到達目標位置
+        while (Vector3.Distance(moveGround.transform.position, targetPosition) > 0.01f)
+        {
+            elapsedTime += Time.deltaTime;
+            moveGround.transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime * moveSpeed);
+            yield return null; // 等待下一幀
+        }
+
+        // 確保地板到達精確目標位置
+        moveGround.transform.position = targetPosition;
     }
 
     private void JumpControl()

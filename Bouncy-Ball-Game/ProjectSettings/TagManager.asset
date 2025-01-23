@@ -7,6 +7,8 @@ TagManager:
   - Wall
   - Slide
   - Obstacle
+  - MoveGroundWallCheck
+  - DeadLine
   layers:
   - Default
   - TransparentFX
