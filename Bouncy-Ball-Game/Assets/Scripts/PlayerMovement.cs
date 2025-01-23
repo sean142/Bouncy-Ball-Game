@@ -17,6 +17,10 @@ public class PlayerMovement : MonoBehaviour
     public bool isGrounded = true;
     private Vector3 startPoint;
 
+    public bool isWithinBounds = true; //判斷是否超出場外
+    public float outOfBoundsY = 0.5f; // 場外檢測最低高度
+    public bool playerMove = true;
+
     [Header("彈力相關")]
     public PhysicMaterial bounceMaterial; // 彈力材質
     public float baseBounciness = 0.2f;   // 基礎彈性
@@ -63,6 +67,11 @@ public class PlayerMovement : MonoBehaviour
             isStunned = false;
         }
 
+        if (!isGrounded && transform.position.y < outOfBoundsY)
+        {
+            isWithinBounds = false;
+        }
+
         if (!isStunned)
         {
             // 持續向前移動
@@ -77,11 +86,21 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void FixedUpdate()
-    {
-        if (!isStunned)
+    {            
+        if (playerMove)
         {
             Movement();
-        }
+
+            if (!isStunned)
+            {
+                Movement();
+            }
+
+            if (!isWithinBounds)
+            {
+                playerMove = false;
+            }
+        }   
     }
 
     private void OnTriggerEnter(Collider other)
@@ -105,7 +124,7 @@ public class PlayerMovement : MonoBehaviour
         {
             // TODO: 場景重製
             // TODO: 
-            transform.position = startPoint;
+            ResetPlayer();
         }
     }   
 
@@ -126,6 +145,7 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, verticalmove * speed * Time.fixedDeltaTime);
         }
+
         if (horizontalmove != 0f)
         {
             rb.velocity = new Vector3(horizontalmove * speed * Time.fixedDeltaTime, rb.velocity.y, rb.velocity.z);
@@ -248,7 +268,11 @@ public class PlayerMovement : MonoBehaviour
         // 使用 Raycast 檢測是否在地面
         return Physics.Raycast(transform.position, Vector3.down, 1.1f);
     }
-
+    private void ResetPlayer()
+    {
+        transform.position = startPoint;
+        playerMove = true;
+    }
     private void UpdateDistanceUI()
     {
         if (distanceText != null)

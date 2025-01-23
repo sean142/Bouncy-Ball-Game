@@ -1758,6 +1758,9 @@ MonoBehaviour:
   chargeTime: 0
   isCharging: 0
   isGrounded: 1
+  isWithinBounds: 1
+  outOfBoundsY: 0.5
+  playerMove: 1
   bounceMaterial: {fileID: 13400000, guid: a1e04b25c3aa7cb45a6cb05a6e8b6299, type: 2}
   baseBounciness: 0.2
   maxBounciness: 0.6
