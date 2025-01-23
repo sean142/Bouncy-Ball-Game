@@ -1760,7 +1760,6 @@ MonoBehaviour:
   isGrounded: 1
   isWithinBounds: 1
   outOfBoundsY: 0.5
-  playerMove: 1
   bounceMaterial: {fileID: 13400000, guid: a1e04b25c3aa7cb45a6cb05a6e8b6299, type: 2}
   baseBounciness: 0.2
   maxBounciness: 0.6
@@ -1776,6 +1775,7 @@ MonoBehaviour:
   distanceText: {fileID: 590409477}
   chargeTimeText: {fileID: 316023920}
   chargeSlider: {fileID: 0}
+  isStunned: 0
 --- !u!54 &777259591
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2802,7 +2802,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1899330647
 BoxCollider:
   m_ObjectHideFlags: 0
