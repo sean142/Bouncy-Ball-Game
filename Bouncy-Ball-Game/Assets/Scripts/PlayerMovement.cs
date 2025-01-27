@@ -11,7 +11,7 @@ public class PlayerMovement : MonoBehaviour
     public float maxJumpForce = 20f; // 最大跳躍力
 
     private Rigidbody rb;
-    private Collider ballCollider;        // 球的碰撞器
+    private Collider ballCollider;       
     private Vector3 startPoint;
 
     public float chargeTime = 0f;   // 當前蓄力時間
@@ -40,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("UI")]
     public Text distanceText;       // 距離顯示 UI
-    public Text chargeTimeText;     // 蓄力顯示UI
+    //public Text chargeTimeText;     // 蓄力顯示UI
     public Slider chargeSlider;     // 蓄力條
 
     [Header("撞擊相關")]
@@ -120,7 +120,7 @@ public class PlayerMovement : MonoBehaviour
         float horizontalmove = Input.GetAxis("Horizontal");
         float verticalmove = Input.GetAxis("Vertical");
 
-        if (verticalmove != 0f)
+        if (verticalmove > 0f)
         {
             rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, verticalmove * speed * Time.fixedDeltaTime);
         }
@@ -200,7 +200,9 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Space) && isCharging && isGrounded)
         {
             Jump();
-        }       
+
+            StartCoroutine(ResetChargeSlider()); 
+        }
     }
 
     private void Jump()
@@ -238,6 +240,14 @@ public class PlayerMovement : MonoBehaviour
         isCharging = false;
         isWithinBounds = true;
         isGrounded = true;
+        chargeSlider.value = 0;
+
+        // 重置剛體速度
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero; // 如果有旋轉，重置角速度
+        }
     }
     private void UpdateDistanceUI()
     {
@@ -249,15 +259,28 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void UpdateChargeUI()
-    {
+    {/*
         if (chargeTimeText)
         {
             chargeTimeText.text = Mathf.RoundToInt(chargeTime).ToString();
-        }
+        }*/
 
         if (chargeSlider)
         {
             chargeSlider.value = chargeTime / maxChargeTime;
         }
+    }
+
+    private IEnumerator ResetChargeSlider()
+    {
+        float decrementSpeed = 1f; // 遞減速度，每秒減少的值
+
+        while (chargeSlider.value > 0)
+        {
+            chargeSlider.value -= Time.deltaTime * decrementSpeed;
+            yield return null; // 等待下一幀
+        }
+
+        chargeSlider.value = 0; // 確保最後值為 0
     }
 }
