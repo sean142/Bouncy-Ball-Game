@@ -33,10 +33,12 @@ public class PlayerMovement : MonoBehaviour
     private int nextGroundIndex = 0;
     private int groundLength = 50;  // 單片地面的長度
 
+    /*
     public GameObject moveGround;
     public GameObject moveGroundWallCheck;
     public int targetOffset = 5;  // Z 軸移動的距離
     public float moveSpeed = 2f;  // 移動速度
+    */
 
     [Header("UI")]
     public Text distanceText;       // 距離顯示 UI
@@ -95,6 +97,7 @@ public class PlayerMovement : MonoBehaviour
             UpdateGroundPosition(); // 更新地面位置          
         }
 
+        /*
         if (other.CompareTag("MoveGroundWallCheck"))
         {
             // 計算目標位置
@@ -103,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
 
             // 開始移動地板
             StartCoroutine(MoveGroundToPosition(targetPosition));
-        }
+        }*/
 
         if (other.CompareTag("DeadLine"))
         {
@@ -153,7 +156,7 @@ public class PlayerMovement : MonoBehaviour
         wallPoint.z += groundLength;
         normalGroundsWallCheck.transform.position = wallPoint;
     }
-
+    /*
     private IEnumerator MoveGroundToPosition(Vector3 targetPosition)
     {
 
@@ -172,7 +175,7 @@ public class PlayerMovement : MonoBehaviour
 
         // 確保地板到達精確目標位置
         moveGround.transform.position = targetPosition;
-    }
+    }*/
 
     private void JumpControl()
     {     
